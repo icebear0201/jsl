@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 5 - Shopping Cart & Discount Calculator</title>
+</head>
+<body>
+  <h2>Experiment 5: Shopping Cart & Discount Calculator</h2>
+
+  <label>Item Name: <input type="text" id="itemName"></label><br><br>
+  <label>Price (Rs): <input type="number" id="itemPrice"></label><br><br>
+  <label>Quantity: <input type="number" id="itemQty"></label><br><br>
+  <button onclick="addItem()">Add Item</button>
+
+  <hr>
+
+  <label>Discount (%): <input type="number" id="discountPct"></label>
+  <button onclick="renderCart()">Apply Discount</button>
+
+  <h3>Cart Items:</h3>
+  <table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Item Name</th>
+        <th>Price (Rs)</th>
+        <th>Qty</th>
+        <th>Total (Rs)</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="cartBody"></tbody>
+  </table>
+
+  <pre id="summaryBox"></pre>
+
+  <script>
+    let cart = [];
+
+    function addItem() {
+      const name = document.getElementById("itemName").value.trim();
+      const price = Number(document.getElementById("itemPrice").value);
+      const qty = Number(document.getElementById("itemQty").value);
+
+      if (!name || price <= 0 || qty <= 0) {
+        alert("Please enter valid item name, price, and quantity.");
+        return;
+      }
+
+      cart.push({ id: Date.now(), name: name, price: price, qty: qty });
+
+      document.getElementById("itemName").value = "";
+      document.getElementById("itemPrice").value = "";
+      document.getElementById("itemQty").value = "";
+
+      renderCart();
+    }
+
+    function deleteItem(id) {
+      cart = cart.filter((item) => item.id !== id);
+      renderCart();
+    }
+
+    function renderCart() {
+      const tbody = document.getElementById("cartBody");
+      const summaryEl = document.getElementById("summaryBox");
+
+      if (cart.length === 0) {
+        tbody.innerHTML = "";
+        summaryEl.innerText = "Cart is empty.";
+        return;
+      }
+
+      tbody.innerHTML = cart
+        .map((item, index) => `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${item.name}</td>
+            <td>${item.price.toFixed(2)}</td>
+            <td>${item.qty}</td>
+            <td>${(item.price * item.qty).toFixed(2)}</td>
+            <td><button onclick="deleteItem(${item.id})">Delete</button></td>
+          </tr>
+        `)
+        .join("");
+
+      const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const discountPct = Number(document.getElementById("discountPct").value) || 0;
+
+      if (discountPct < 0 || discountPct > 100) {
+        summaryEl.innerText = "Error: Discount % must be between 0 and 100.";
+        return;
+      }
+
+      const discountAmount = (subtotal * discountPct) / 100;
+      const finalPayable = subtotal - discountAmount;
+
+      summaryEl.innerText =
+        `Total Items   : ${cart.length}\n` +
+        `Subtotal      : Rs. ${subtotal.toFixed(2)}\n` +
+        `Discount (${discountPct}%) : -Rs. ${discountAmount.toFixed(2)}\n` +
+        `Final Payable : Rs. ${finalPayable.toFixed(2)}`;
+    }
+  </script>
+</body>
+</html>

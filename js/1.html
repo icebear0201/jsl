@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 1 - Inline, Internal & External JS</title>
+</head>
+<body>
+  <h2>Experiment 1: JavaScript Integration & Welcome Message</h2>
+
+  <!-- 1. INLINE JAVASCRIPT BUTTON -->
+  <button onclick="document.getElementById('jsOutput').innerText = 'This is Inline JavaScript.'">
+    Inline JS
+  </button>
+
+  <!-- 2. INTERNAL JAVASCRIPT BUTTON -->
+  <button onclick="showInternal()">
+    Internal JS
+  </button>
+
+  <!-- 3. EXTERNAL JAVASCRIPT BUTTON -->
+  <button onclick="showExternal()">
+    External JS
+  </button>
+
+  <p id="jsOutput"></p>
+
+  <hr>
+
+  <!-- USER INFORMATION & WELCOME MESSAGE -->
+  <button onclick="showWelcome()">Enter User Info</button>
+  <p id="welcomeMsg"></p>
+
+  <!-- INTERNAL JAVASCRIPT -->
+  <script>
+    function showInternal() {
+      document.getElementById("jsOutput").innerText = "This is Internal JavaScript.";
+    }
+
+    function showWelcome() {
+      let name = prompt("Enter your full name:");
+      let city = prompt("Enter your city:");
+
+      if (name && city) {
+        document.getElementById("welcomeMsg").innerText =
+          "Welcome, " + name + " from " + city + "!";
+      } else {
+        document.getElementById("welcomeMsg").innerText =
+          "User details were not provided.";
+      }
+    }
+  </script>
+
+  <!-- EXTERNAL JAVASCRIPT LINK -->
+  <script src="./exp1.js"></script>
+</body>
+</html>

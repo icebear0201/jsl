@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 7 - DOM Traversal, Updates & To-Do Checklist</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #000;
+    }
+    .todo-box {
+      border: 2px solid #000;
+      padding: 15px;
+      width: 420px;
+      margin-top: 15px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+    li {
+      border: 1px solid #000;
+      padding: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .left-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .done {
+      text-decoration: line-through;
+    }
+  </style>
+</head>
+<body>
+  <h2>Experiment 7: To-Do Checklist</h2>
+
+  <input type="text" id="taskInput">
+  <button onclick="addTask()">Add Task</button>
+
+  <div class="todo-box">
+    <ul id="todoList"></ul>
+  </div>
+
+  <script>
+    const todoList = document.getElementById("todoList");
+
+    function addTask() {
+      const input = document.getElementById("taskInput");
+      const text = input.value.trim();
+
+      if (text === "") {
+        alert("Please enter a task.");
+        return;
+      }
+
+      const li = document.createElement("li");
+
+      const leftGroup = document.createElement("div");
+      leftGroup.className = "left-group";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.onchange = function () {
+        const span = this.nextElementSibling;
+        span.classList.toggle("done", this.checked);
+      };
+
+      const span = document.createElement("span");
+      span.innerText = text;
+
+      leftGroup.appendChild(checkbox);
+      leftGroup.appendChild(span);
+
+      const btnGroup = document.createElement("div");
+
+      const editBtn = document.createElement("button");
+      editBtn.innerText = "Edit";
+      editBtn.onclick = function () {
+        editTask(this);
+      };
+
+      const delBtn = document.createElement("button");
+      delBtn.innerText = "Delete";
+      delBtn.onclick = function () {
+        deleteTask(this);
+      };
+
+      btnGroup.appendChild(editBtn);
+      btnGroup.appendChild(document.createTextNode(" "));
+      btnGroup.appendChild(delBtn);
+
+      li.appendChild(leftGroup);
+      li.appendChild(btnGroup);
+      todoList.appendChild(li);
+
+      input.value = "";
+    }
+
+    function editTask(button) {
+      const li = button.parentElement.parentElement;
+      const span = li.firstElementChild.lastElementChild;
+      const updatedText = prompt("Edit task:", span.innerText);
+
+      if (updatedText !== null && updatedText.trim() !== "") {
+        span.innerText = updatedText.trim();
+      }
+    }
+
+    function deleteTask(button) {
+      const li = button.parentElement.parentElement;
+      li.parentElement.removeChild(li);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 2 - Multi-Item Billing Calculator</title>
+</head>
+<body>
+  <h2>Experiment 2: Billing Calculator (Add Items List)</h2>
+
+  <label>Item Name: <input type="text" id="itemName"></label><br><br>
+  <label>Unit Price (Rs): <input type="number" id="itemPrice"></label><br><br>
+  <label>Quantity: <input type="number" id="itemQty"></label><br><br>
+
+  <button onclick="addItem()">Add Item</button>
+  <button onclick="generateBill()">Generate Bill</button>
+  <button onclick="clearList()">Clear List</button>
+
+  <h3>Added Items:</h3>
+  <ul id="itemsList"></ul>
+
+  <pre id="billOutput"></pre>
+
+  <script>
+    // var, let, and const declarations
+    var shopName = "City Mart";
+    const RATES = [0.05, 0.18]; // [5% Discount, 18% GST]
+    let cartItems = []; // Stores all added item objects
+
+    function addItem() {
+      // Collect inputs into an object
+      const itemData = {
+        name: document.getElementById("itemName").value.trim(),
+        price: Number(document.getElementById("itemPrice").value),
+        qty: Number(document.getElementById("itemQty").value)
+      };
+
+      // Object Destructuring
+      const { name, price, qty } = itemData;
+
+      if (!name || price <= 0 || qty <= 0) {
+        alert("Please enter valid item name, price, and quantity.");
+        return;
+      }
+
+      // Add item object to the array
+      cartItems.push(itemData);
+
+      // Display the newly added item in the HTML list using Template Literal
+      const listEl = document.getElementById("itemsList");
+      const li = document.createElement("li");
+      li.innerText = `${name} - Rs. ${price.toFixed(2)} x ${qty} = Rs. ${(price * qty).toFixed(2)}`;
+      listEl.appendChild(li);
+
+      // Clear input fields for the next item
+      document.getElementById("itemName").value = "";
+      document.getElementById("itemPrice").value = "";
+      document.getElementById("itemQty").value = "";
+    }
+
+    function generateBill() {
+      if (cartItems.length === 0) {
+        document.getElementById("billOutput").innerText = "No items added yet.";
+        return;
+      }
+
+      // Array Destructuring
+      const [discountRate, gstRate] = RATES;
+
+      let subtotal = 0;
+      let itemLines = "";
+
+      // Loop through each item and use Object Destructuring
+      for (let i = 0; i < cartItems.length; i++) {
+        const { name, price, qty } = cartItems[i];
+        const lineTotal = price * qty;
+        subtotal += lineTotal;
+        itemLines += `${i + 1}. ${name} (${qty} x Rs. ${price.toFixed(2)}) = Rs. ${lineTotal.toFixed(2)}\n`;
+      }
+
+      const discount = subtotal * discountRate;
+      const taxableAmount = subtotal - discount;
+      const gst = taxableAmount * gstRate;
+      const netTotal = taxableAmount + gst;
+
+      // Multi-line Template Literal Receipt
+      const receipt = `
+==========================================
+               RECEIPT
+==========================================
+${itemLines}------------------------------------------
+Subtotal        : Rs. ${subtotal.toFixed(2)}
+Discount (5%)   : -Rs. ${discount.toFixed(2)}
+GST (18%)       : +Rs. ${gst.toFixed(2)}
+------------------------------------------
+NET PAYABLE     : Rs. ${netTotal.toFixed(2)}
+==========================================`;
+
+      document.getElementById("billOutput").innerText = receipt;
+    }
+
+    function clearList() {
+      cartItems = [];
+      document.getElementById("itemsList").innerHTML = "";
+      document.getElementById("billOutput").innerText = "";
+    }
+  </script>
+</body>
+</html>

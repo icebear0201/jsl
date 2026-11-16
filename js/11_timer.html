@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 11 - ES6 Modules, Timers & Class Scheduler</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      padding: 15px;
+    }
+    .box {
+      border: 2px solid #000000;
+      padding: 15px;
+      width: 460px;
+      margin-bottom: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #000000;
+      padding: 6px;
+      text-align: left;
+    }
+    input, button {
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Experiment 11: Class Scheduler & Live Countdown</h2>
+
+  <!-- 1. Add Class Schedule -->
+  <div class="box">
+    <h3>Add Class to Schedule</h3>
+    <label>Subject Name:<br>
+      <input type="text" id="subjectInput">
+    </label><br><br>
+
+    <label>Starts In (Seconds):<br>
+      <input type="number" id="delayInput">
+    </label><br><br>
+
+    <label>Class Duration (Seconds):<br>
+      <input type="number" id="durationInput">
+    </label><br><br>
+
+    <button id="addClassBtn">Schedule Class</button>
+    <button id="clearAllBtn">Clear All</button>
+  </div>
+
+  <!-- 2. Live Active Class Countdown -->
+  <div class="box">
+    <h3>Live Class Status</h3>
+    <p id="statusBanner">No active or upcoming class.</p>
+    <h1 id="timerDisplay">00:00</h1>
+    <button id="pauseBtn">Pause</button>
+    <button id="resumeBtn">Resume</button>
+  </div>
+
+  <!-- 3. Scheduled Classes Table -->
+  <div class="box">
+    <h3>Scheduled Classes</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Subject</th>
+          <th>Starts In</th>
+          <th>Duration</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="scheduleBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Inline ES6 Module (created & imported dynamically in one file) -->
+  <script id="timerModuleCode" type="text/plain">
+    export function formatTime(totalSeconds) {
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+      return String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+    }
+
+    export function createScheduleEntry(subject, startsIn, duration) {
+      return {
+        id: Date.now(),
+        subject,
+        startsIn,
+        duration,
+        status: "Waiting"
+      };
+    }
+  </script>
+
+  <script type="module">
+    // Load the ES6 module from the inline script tag via Blob URL
+    const moduleSource = document.getElementById("timerModuleCode").textContent;
+    const moduleBlob = new Blob([moduleSource], { type: "application/javascript" });
+    const moduleUrl = URL.createObjectURL(moduleBlob);
+    const { formatTime, createScheduleEntry } = await import(moduleUrl);
+
+    let schedules = [];
+    let activeTimer = null;
+    let startTimeout = null;
+    let remainingSeconds = 0;
+    let currentClass = null;
+    let isPaused = false;
+
+    const subjectInput = document.getElementById("subjectInput");
+    const delayInput = document.getElementById("delayInput");
+    const durationInput = document.getElementById("durationInput");
+    const statusBanner = document.getElementById("statusBanner");
+    const timerDisplay = document.getElementById("timerDisplay");
+    const scheduleBody = document.getElementById("scheduleBody");
+
+    function renderTable() {
+      scheduleBody.innerHTML = schedules
+        .map((item, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${item.subject}</td>
+            <td>${item.startsIn}s</td>
+            <td>${item.duration}s</td>
+            <td>${item.status}</td>
+          </tr>
+        `)
+        .join("");
+    }
+
+    function startClassCountdown(entry) {
+      clearInterval(activeTimer);
+      currentClass = entry;
+      remainingSeconds = entry.duration;
+      isPaused = false;
+      entry.status = "In Progress";
+      renderTable();
+
+      statusBanner.innerText = "LIVE NOW: " + entry.subject;
+      timerDisplay.innerText = formatTime(remainingSeconds);
+
+      activeTimer = setInterval(() => {
+        if (!isPaused) {
+          remainingSeconds--;
+          timerDisplay.innerText = formatTime(remainingSeconds);
+
+          if (remainingSeconds <= 0) {
+            clearInterval(activeTimer);
+            entry.status = "Completed";
+            statusBanner.innerText = "COMPLETED: " + entry.subject;
+            timerDisplay.innerText = "00:00";
+            currentClass = null;
+            renderTable();
+          }
+        }
+      }, 1000);
+    }
+
+    document.getElementById("addClassBtn").addEventListener("click", () => {
+      const subject = subjectInput.value.trim();
+      const startsIn = Number(delayInput.value);
+      const duration = Number(durationInput.value);
+
+      if (!subject || startsIn < 0 || duration <= 0) {
+        alert("Enter a valid subject name, start delay (>= 0), and duration (> 0).");
+        return;
+      }
+
+      const entry = createScheduleEntry(subject, startsIn, duration);
+      schedules.push(entry);
+      renderTable();
+
+      statusBanner.innerText = `Scheduled "${subject}" to start in ${startsIn}s...`;
+
+      // setTimeout triggers the class automatically after 'startsIn' seconds
+      startTimeout = setTimeout(() => {
+        startClassCountdown(entry);
+      }, startsIn * 1000);
+
+      subjectInput.value = "";
+      delayInput.value = "";
+      durationInput.value = "";
+    });
+
+    document.getElementById("pauseBtn").addEventListener("click", () => {
+      if (currentClass && !isPaused) {
+        isPaused = true;
+        statusBanner.innerText = "PAUSED: " + currentClass.subject;
+      }
+    });
+
+    document.getElementById("resumeBtn").addEventListener("click", () => {
+      if (currentClass && isPaused) {
+        isPaused = false;
+        statusBanner.innerText = "LIVE NOW: " + currentClass.subject;
+      }
+    });
+
+    document.getElementById("clearAllBtn").addEventListener("click", () => {
+      clearInterval(activeTimer);
+      clearTimeout(startTimeout);
+      schedules = [];
+      currentClass = null;
+      remainingSeconds = 0;
+      isPaused = false;
+      timerDisplay.innerText = "00:00";
+      statusBanner.innerText = "No active or upcoming class.";
+      renderTable();
+    });
+  </script>
+</body>
+</html>

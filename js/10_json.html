@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 10 - JSON, fetch() and jQuery $.getJSON()</title>
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #000000;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    button {
+      padding: 8px 15px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>Experiment 10: Dynamic Data Tables (JSON APIs)</h2>
+
+  <button onclick="loadWithFetch()">Load Data using fetch()</button>
+  <button onclick="loadWithJQuery()">Load Data using jQuery $.getJSON()</button>
+  <button onclick="clearTable()">Clear Table</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>City</th>
+      </tr>
+    </thead>
+    <tbody id="dataTableBody">
+      <!-- Data will be injected here dynamically -->
+    </tbody>
+  </table>
+
+  <script>
+    // Fake REST API URL for testing
+    const API_URL = "https://jsonplaceholder.typicode.com/users";
+
+    // 1. Using modern JavaScript fetch()
+    function loadWithFetch() {
+      document.getElementById("dataTableBody").innerHTML = "<tr><td colspan='4'>Loading with fetch()...</td></tr>";
+      
+      fetch(API_URL)
+        .then(response => response.json()) // Parse JSON
+        .then(data => {
+          renderTable(data);
+        })
+        .catch(error => {
+          document.getElementById("dataTableBody").innerHTML = "<tr><td colspan='4'>Error loading data.</td></tr>";
+        });
+    }
+
+    // 2. Using jQuery $.getJSON()
+    function loadWithJQuery() {
+      document.getElementById("dataTableBody").innerHTML = "<tr><td colspan='4'>Loading with jQuery...</td></tr>";
+      
+      $.getJSON(API_URL, function(data) {
+        renderTable(data);
+      }).fail(function() {
+        document.getElementById("dataTableBody").innerHTML = "<tr><td colspan='4'>Error loading data.</td></tr>";
+      });
+    }
+
+    // 3. Function to dynamically build the table rows
+    function renderTable(users) {
+      const tbody = document.getElementById("dataTableBody");
+      tbody.innerHTML = ""; // Clear loading message
+
+      // Limit to 5 users for a cleaner table
+      const limitedUsers = users.slice(0, 5);
+
+      limitedUsers.forEach(user => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${user.id}</td>
+          <td>${user.name}</td>
+          <td>${user.email}</td>
+          <td>${user.address.city}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function clearTable() {
+      document.getElementById("dataTableBody").innerHTML = "";
+    }
+  </script>
+</body>
+</html>

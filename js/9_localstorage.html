@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Theme Saver</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background-color: white;
+      color: black;
+      padding: 15px;
+    }
+
+    .box {
+      border: 2px solid black;
+      padding: 15px;
+      width: 400px;
+    }
+
+    .dark-mode {
+      background-color: black;
+      color: white;
+    }
+
+    .dark-mode .box {
+      border-color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Experiment 9: Theme Saver</h2>
+
+  <div class="box">
+
+    <label>Select Theme:</label>
+
+    <select id="themeSelect">
+      <option value="light">Light Mode</option>
+      <option value="dark">Dark Mode</option>
+    </select>
+
+    <br><br>
+
+    <button onclick="saveLocal()">
+      Save to localStorage
+    </button>
+
+    <br><br>
+
+    <button onclick="saveSession()">
+      Save to sessionStorage
+    </button>
+
+    <br><br>
+
+    <button onclick="clearStorage()">
+      Clear All Storage
+    </button>
+
+  </div>
+
+  <pre id="status"></pre>
+
+  <script>
+
+    function updateUI() {
+
+      let local = localStorage.getItem("myTheme");
+      let session = sessionStorage.getItem("myTheme");
+
+      let theme = session || local || "light";
+
+      if (theme === "dark") {
+        document.body.classList.add("dark-mode");
+      } else {
+        document.body.classList.remove("dark-mode");
+      }
+
+      document.getElementById("themeSelect").value = theme;
+
+      document.getElementById("status").innerText =
+        "Local Storage: " + (local || "Empty") + "\n" +
+        "Session Storage: " + (session || "Empty") + "\n" +
+        "Active Theme: " + theme;
+    }
+
+    function saveLocal() {
+
+      let theme = document.getElementById("themeSelect").value;
+
+      localStorage.setItem("myTheme", theme);
+
+      sessionStorage.removeItem("myTheme");
+
+      updateUI();
+    }
+
+    function saveSession() {
+
+      let theme = document.getElementById("themeSelect").value;
+
+      sessionStorage.setItem("myTheme", theme);
+
+      updateUI();
+    }
+
+    function clearStorage() {
+
+      localStorage.removeItem("myTheme");
+
+      sessionStorage.removeItem("myTheme");
+
+      updateUI();
+    }
+
+    window.onload = updateUI;
+
+  </script>
+
+</body>
+</html>
+

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 6 - String Methods, RegEx, Email Validation & Text Analysis</title>
+</head>
+<body>
+  <h2>Experiment 6: Email Validation & Text Analysis</h2>
+
+  <h3>1. Email Validation</h3>
+  <label>Enter Email: <input type="text" id="emailInput"></label>
+  <button onclick="validateEmail()">Validate Email</button>
+  <p id="emailResult"></p>
+
+  <hr>
+
+  <h3>2. Text Analysis</h3>
+  <label>Enter Text:</label><br>
+  <textarea id="textInput" rows="5" cols="45"></textarea><br><br>
+  <button onclick="analyzeText()">Analyze Text</button>
+  <pre id="textResult"></pre>
+
+  <script>
+    function validateEmail() {
+      const email = document.getElementById("emailInput").value.trim();
+      const resultEl = document.getElementById("emailResult");
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+      if (email === "") {
+        resultEl.innerText = "Please enter an email address.";
+      } else if (emailRegex.test(email)) {
+        const [username, domain] = email.split("@");
+        resultEl.innerText = `Valid Email! (Username: ${username}, Domain: ${domain})`;
+      } else {
+        resultEl.innerText = "Invalid Email Format.";
+      }
+    }
+
+    function analyzeText() {
+      const text = document.getElementById("textInput").value;
+      const outputEl = document.getElementById("textResult");
+
+      if (text.trim() === "") {
+        outputEl.innerText = "Please enter some text to analyze.";
+        return;
+      }
+
+      const totalChars = text.length;
+      const charsNoSpaces = text.replace(/\s+/g, "").length;
+      const words = text.trim().split(/\s+/).length;
+      const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0).length;
+      const vowels = (text.match(/[aeiou]/gi) || []).length;
+      const digits = (text.match(/[0-9]/g) || []).length;
+      const upperCase = text.toUpperCase();
+      const lowerCase = text.toLowerCase();
+
+      outputEl.innerText =
+        `Total Characters (with spaces)    : ${totalChars}\n` +
+        `Total Characters (without spaces) : ${charsNoSpaces}\n` +
+        `Total Words                       : ${words}\n` +
+        `Total Sentences                   : ${sentences}\n` +
+        `Vowel Count                       : ${vowels}\n` +
+        `Digit Count                       : ${digits}\n` +
+        `UPPERCASE                         : ${upperCase}\n` +
+        `lowercase                         : ${lowerCase}`;
+    }
+  </script>
+</body>
+</html>

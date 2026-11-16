@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 3 - Control Structures & Dynamic Grading System</title>
+</head>
+<body>
+  <h2>Experiment 3: Student Grading System</h2>
+
+  <!-- Student Details -->
+  <label>Student Name: <input type="text" id="studentName"></label><br><br>
+  <label>Roll No: <input type="text" id="rollNo"></label><br><br>
+
+  <hr>
+
+  <!-- Add Subject Section -->
+  <h3>Add Subjects</h3>
+  <label>Subject Name: <input type="text" id="subjectName"></label><br><br>
+  <label>Marks (0-100): <input type="number" id="subjectMarks"></label><br><br>
+  <button type="button" onclick="addSubject()">Add Subject</button>
+  <button type="button" onclick="resetAll()">Reset All</button>
+
+  <h4>Added Subjects:</h4>
+  <ul id="subjectList"></ul>
+
+  <hr>
+
+  <button type="button" onclick="evaluateGrade()">Calculate Result</button>
+
+  <p id="errorMsg"></p>
+  <pre id="resultBox"></pre>
+
+  <script>
+    // Array to store objects like { subject: "Math", marks: 85 }
+    let subjects = [];
+
+    function addSubject() {
+      const errorEl = document.getElementById("errorMsg");
+      errorEl.innerText = "";
+
+      const subName = document.getElementById("subjectName").value.trim();
+      const rawMarks = document.getElementById("subjectMarks").value;
+      const score = Number(rawMarks);
+
+      // Validate Subject Name and Marks
+      if (subName === "") {
+        errorEl.innerText = "Error: Please enter a subject name.";
+        return;
+      }
+      if (rawMarks === "" || isNaN(score) || score < 0 || score > 100) {
+        errorEl.innerText = "Error: Marks for " + subName + " must be between 0 and 100.";
+        return;
+      }
+
+      // Save subject object into array
+      subjects.push({ subject: subName, marks: score });
+
+      // Display added subject in the HTML list
+      const li = document.createElement("li");
+      li.innerText = subName + " : " + score + " / 100";
+      document.getElementById("subjectList").appendChild(li);
+
+      // Clear subject inputs for the next entry
+      document.getElementById("subjectName").value = "";
+      document.getElementById("subjectMarks").value = "";
+    }
+
+    function evaluateGrade() {
+      const errorEl = document.getElementById("errorMsg");
+      const resultEl = document.getElementById("resultBox");
+      errorEl.innerText = "";
+      resultEl.innerText = "";
+
+      const name = document.getElementById("studentName").value.trim();
+      const roll = document.getElementById("rollNo").value.trim();
+
+      // 1. Validate Student Name and Roll No
+      if (name === "") {
+        errorEl.innerText = "Error: Student name cannot be empty.";
+        return;
+      }
+      if (roll === "") {
+        errorEl.innerText = "Error: Roll number cannot be empty.";
+        return;
+      }
+      if (subjects.length === 0) {
+        errorEl.innerText = "Error: Please add at least one subject.";
+        return;
+      }
+
+      // 2. Process all subjects using a for loop
+      let total = 0;
+      let hasFailedSubject = false;
+      let subjectBreakdown = "";
+
+      for (let i = 0; i < subjects.length; i++) {
+        let sub = subjects[i].subject;
+        let mark = subjects[i].marks;
+
+        if (mark < 40) {
+          hasFailedSubject = true;
+        }
+
+        total += mark;
+        subjectBreakdown += "  " + (i + 1) + ". " + sub + " : " + mark + " / 100\n";
+      }
+
+      const maxTotal = subjects.length * 100;
+      const percentage = (total / maxTotal) * 100;
+
+      // 3. Assign Grade using if - else if - else
+      let grade = "";
+      if (hasFailedSubject) {
+        grade = "F";
+      } else if (percentage >= 90) {
+        grade = "A+";
+      } else if (percentage >= 75) {
+        grade = "A";
+      } else if (percentage >= 60) {
+        grade = "B";
+      } else if (percentage >= 40) {
+        grade = "C";
+      } else {
+        grade = "F";
+      }
+
+      // 4. Assign Remark using switch statement
+      let remark = "";
+      switch (grade) {
+        case "A+":
+          remark = "Distinction - Outstanding Performance!";
+          break;
+        case "A":
+          remark = "First Class - Great Job!";
+          break;
+        case "B":
+          remark = "Second Class - Good Effort.";
+          break;
+        case "C":
+          remark = "Pass Class - Satisfactory.";
+          break;
+        default:
+          remark = "Fail - Re-examination Required.";
+      }
+
+      // 5. Display Complete Report Card
+      resultEl.innerText =
+        "==============================\n" +
+        "      STUDENT REPORT CARD     \n" +
+        "==============================\n" +
+        "Name         : " + name + "\n" +
+        "Roll No      : " + roll + "\n" +
+        "------------------------------\n" +
+        "Subjects:\n" + subjectBreakdown +
+        "------------------------------\n" +
+        "Total Marks  : " + total + " / " + maxTotal + "\n" +
+        "Percentage   : " + percentage.toFixed(2) + "%\n" +
+        "Grade        : " + grade + "\n" +
+        "==============================";
+    }
+
+    function resetAll() {
+      subjects = [];
+      document.getElementById("studentName").value = "";
+      document.getElementById("rollNo").value = "";
+      document.getElementById("subjectName").value = "";
+      document.getElementById("subjectMarks").value = "";
+      document.getElementById("subjectList").innerHTML = "";
+      document.getElementById("errorMsg").innerText = "";
+      document.getElementById("resultBox").innerText = "";
+    }
+  </script>
+</body>
+</html>

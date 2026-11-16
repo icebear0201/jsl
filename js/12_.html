@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 12 - Interactive Real-Time Task & Directory App</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      padding: 15px;
+      margin: 0;
+    }
+    body.dark-mode {
+      background-color: #000000;
+      color: #ffffff;
+    }
+    .header-bar {
+      border: 2px solid currentColor;
+      padding: 12px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .panel {
+      border: 2px solid currentColor;
+      padding: 15px;
+      flex: 1 1 460px;
+      min-width: 0;
+      overflow-x: auto;
+    }
+    .panel h3 {
+      margin-top: 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid currentColor;
+      padding: 6px;
+      text-align: left;
+      word-break: break-word;
+    }
+    .done-task {
+      text-decoration: line-through;
+    }
+    input[type="text"], select {
+      width: 100%;
+      margin-top: 5px;
+      padding: 6px;
+    }
+    button {
+      margin-top: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header with Live Clock & localStorage Theme Toggle -->
+  <div class="header-bar">
+    <div>
+      <strong>Experiment 12: Real-Time Task & Team Manager</strong><br>
+      <span id="liveClock"></span>
+    </div>
+    <div>
+      <button id="themeToggleBtn">Toggle Dark/Light Theme</button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- LEFT PANEL: AJAX Team Directory (jQuery $.ajax + Live Search Filter) -->
+    <div class="panel">
+      <h3>1. Live Team Directory (AJAX + Real-Time Filter)</h3>
+      <button id="fetchUsersBtn">Load Users via AJAX</button>
+      <span id="ajaxStatus"></span><br><br>
+
+      <label>Live Search Name/City:<br>
+        <input type="text" id="searchUserInput">
+      </label>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>City</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- RIGHT PANEL: Persistent Task Board (DOM + Events + localStorage) -->
+    <div class="panel">
+      <h3>2. Assigned Task Board (localStorage)</h3>
+      <label>Task Description:<br>
+        <input type="text" id="taskTitleInput">
+      </label><br><br>
+
+      <label>Assign To:<br>
+        <select id="assigneeSelect">
+          <option value="">-- Select Member (or Load AJAX) --</option>
+        </select>
+      </label><br><br>
+
+      <label>Priority:<br>
+        <select id="prioritySelect">
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </label><br><br>
+
+      <button id="addTaskBtn">Assign Task</button>
+      <button id="clearTasksBtn">Clear All Tasks</button>
+
+      <p id="taskStats"></p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Done</th>
+            <th>Task</th>
+            <th>Assignee</th>
+            <th>Priority</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody id="tasksTableBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      let fetchedUsers = [];
+      let tasks = JSON.parse(localStorage.getItem("exp12_tasks")) || [];
+
+      // 1. Real-Time Digital Clock (setInterval)
+      function updateClock() {
+        const now = new Date();
+        $("#liveClock").text("Live Time: " + now.toLocaleTimeString());
+      }
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      // 2. Theme Persistence via localStorage
+      function applySavedTheme() {
+        const savedTheme = localStorage.getItem("exp12_theme") || "light";
+        if (savedTheme === "dark") {
+          $("body").addClass("dark-mode");
+        } else {
+          $("body").removeClass("dark-mode");
+        }
+      }
+      applySavedTheme();
+
+      $("#themeToggleBtn").on("click", function () {
+        $("body").toggleClass("dark-mode");
+        const currentTheme = $("body").hasClass("dark-mode") ? "dark" : "light";
+        localStorage.setItem("exp12_theme", currentTheme);
+      });
+
+      // 3. AJAX Data Fetch using jQuery $.ajax()
+      $("#fetchUsersBtn").on("click", function () {
+        $("#ajaxStatus").text(" Loading...");
+        $.ajax({
+          url: "https://jsonplaceholder.typicode.com/users",
+          method: "GET",
+          dataType: "json",
+          success: function (data) {
+            fetchedUsers = data;
+            $("#ajaxStatus").text(" Loaded " + data.length + " members.");
+            renderUsersTable(fetchedUsers);
+            populateAssigneeDropdown(fetchedUsers);
+          },
+          error: function () {
+            $("#ajaxStatus").text(" Failed to fetch data.");
+          }
+        });
+      });
+
+      function renderUsersTable(usersList) {
+        const $tbody = $("#usersTableBody");
+        $tbody.empty();
+
+        usersList.forEach(function (user) {
+          const row = `
+            <tr>
+              <td>${user.id}</td>
+              <td>${user.name}</td>
+              <td>${user.email}</td>
+              <td>${user.address.city}</td>
+              <td><button class="quick-select-btn" data-name="${user.name}">Select</button></td>
+            </tr>
+          `;
+          $tbody.append(row);
+        });
+      }
+
+      function populateAssigneeDropdown(usersList) {
+        const $select = $("#assigneeSelect");
+        $select.html('<option value="">-- Select Member --</option>');
+        usersList.forEach(function (user) {
+          $select.append(`<option value="${user.name}">${user.name}</option>`);
+        });
+      }
+
+      // Real-time search filter on keyup event
+      $("#searchUserInput").on("keyup", function () {
+        const keyword = $(this).val().toLowerCase().trim();
+        const filtered = fetchedUsers.filter(function (u) {
+          return (
+            u.name.toLowerCase().includes(keyword) ||
+            u.address.city.toLowerCase().includes(keyword)
+          );
+        });
+        renderUsersTable(filtered);
+      });
+
+      // Event Delegation: Quick-select user from AJAX table into Assign dropdown
+      $("#usersTableBody").on("click", ".quick-select-btn", function () {
+        const memberName = $(this).data("name");
+        $("#assigneeSelect").val(memberName);
+      });
+
+      // 4. Task Board CRUD with localStorage & DOM Updates
+      function saveAndRenderTasks() {
+        localStorage.setItem("exp12_tasks", JSON.stringify(tasks));
+        const $tbody = $("#tasksTableBody");
+        $tbody.empty();
+
+        let completedCount = 0;
+
+        tasks.forEach(function (task) {
+          if (task.completed) completedCount++;
+
+          const row = `
+            <tr>
+              <td><input type="checkbox" class="toggle-task" data-id="${task.id}" ${task.completed ? "checked" : ""}></td>
+              <td class="${task.completed ? "done-task" : ""}">${task.title}</td>
+              <td>${task.assignee}</td>
+              <td>${task.priority}</td>
+              <td><button class="delete-task-btn" data-id="${task.id}">Delete</button></td>
+            </tr>
+          `;
+          $tbody.append(row);
+        });
+
+        $("#taskStats").text(
+          `Total Tasks: ${tasks.length} | Completed: ${completedCount} | Pending: ${tasks.length - completedCount}`
+        );
+      }
+
+      $("#addTaskBtn").on("click", function () {
+        const title = $("#taskTitleInput").val().trim();
+        const assignee = $("#assigneeSelect").val();
+        const priority = $("#prioritySelect").val();
+
+        if (!title || !assignee) {
+          alert("Please enter a task description and select a team member.");
+          return;
+        }
+
+        tasks.push({
+          id: Date.now(),
+          title: title,
+          assignee: assignee,
+          priority: priority,
+          completed: false
+        });
+
+        $("#taskTitleInput").val("");
+        saveAndRenderTasks();
+      });
+
+      // Toggle task completion checkbox (Event Delegation)
+      $("#tasksTableBody").on("change", ".toggle-task", function () {
+        const id = Number($(this).data("id"));
+        tasks = tasks.map(function (t) {
+          if (t.id === id) {
+            t.completed = !t.completed;
+          }
+          return t;
+        });
+        saveAndRenderTasks();
+      });
+
+      // Delete individual task (Event Delegation)
+      $("#tasksTableBody").on("click", ".delete-task-btn", function () {
+        const id = Number($(this).data("id"));
+        tasks = tasks.filter(function (t) {
+          return t.id !== id;
+        });
+        saveAndRenderTasks();
+      });
+
+      $("#clearTasksBtn").on("click", function () {
+        tasks = [];
+        saveAndRenderTasks();
+      });
+
+      // Initial render from localStorage on page load
+      saveAndRenderTasks();
+    });
+  </script>
+</body>
+</html>

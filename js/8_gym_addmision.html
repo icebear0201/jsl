@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 8 - Form Events, Input Validation & Gym Admission Form</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #000;
+    }
+    .form-box {
+      border: 2px solid #000;
+      padding: 15px;
+      width: 420px;
+    }
+    .err {
+      font-size: 12px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Experiment 8: Gym Admission Form</h2>
+
+  <div class="form-box">
+    <form id="gymForm">
+      <label>Full Name:<br>
+        <input type="text" id="fullName">
+      </label><br>
+      <span id="nameErr" class="err"></span><br><br>
+
+      <label>Age (16 - 70):<br>
+        <input type="number" id="age">
+      </label><br>
+      <span id="ageErr" class="err"></span><br><br>
+
+      <label>Phone (10 digits):<br>
+        <input type="text" id="phone">
+      </label><br>
+      <span id="phoneErr" class="err"></span><br><br>
+
+      <label>Membership Plan:<br>
+        <select id="plan">
+          <option value="">-- Select Plan --</option>
+          <option value="Monthly (Rs. 1000)">Monthly (Rs. 1000)</option>
+          <option value="Quarterly (Rs. 2700)">Quarterly (Rs. 2700)</option>
+          <option value="Annual (Rs. 9500)">Annual (Rs. 9500)</option>
+        </select>
+      </label><br>
+      <span id="planErr" class="err"></span><br><br>
+
+      <label>Batch Timing:<br>
+        <input type="radio" name="batch" value="Morning (6 AM - 10 AM)"> Morning
+        <input type="radio" name="batch" value="Evening (5 PM - 9 PM)"> Evening
+      </label><br>
+      <span id="batchErr" class="err"></span><br><br>
+
+      <label>
+        <input type="checkbox" id="terms"> I agree to gym rules & medical fitness declaration
+      </label><br>
+      <span id="termsErr" class="err"></span><br><br>
+
+      <button type="submit">Submit Admission</button>
+      <button type="reset">Reset</button>
+    </form>
+  </div>
+
+  <pre id="admissionReceipt"></pre>
+
+  <script>
+    const form = document.getElementById("gymForm");
+    const nameInput = document.getElementById("fullName");
+    const ageInput = document.getElementById("age");
+    const phoneInput = document.getElementById("phone");
+    const planSelect = document.getElementById("plan");
+    const termsCheck = document.getElementById("terms");
+
+    function validateName() {
+      const val = nameInput.value.trim();
+      const err = document.getElementById("nameErr");
+      if (!/^[a-zA-Z\s]{3,}$/.test(val)) {
+        err.innerText = "Enter at least 3 letters (alphabets only).";
+        return false;
+      }
+      err.innerText = "";
+      return true;
+    }
+
+    function validateAge() {
+      const val = Number(ageInput.value);
+      const err = document.getElementById("ageErr");
+      if (!ageInput.value || val < 16 || val > 70) {
+        err.innerText = "Age must be between 16 and 70.";
+        return false;
+      }
+      err.innerText = "";
+      return true;
+    }
+
+    function validatePhone() {
+      const val = phoneInput.value.trim();
+      const err = document.getElementById("phoneErr");
+      if (!/^[0-9]{10}$/.test(val)) {
+        err.innerText = "Enter a valid 10-digit phone number.";
+        return false;
+      }
+      err.innerText = "";
+      return true;
+    }
+
+    function validatePlan() {
+      const err = document.getElementById("planErr");
+      if (planSelect.value === "") {
+        err.innerText = "Please select a membership plan.";
+        return false;
+      }
+      err.innerText = "";
+      return true;
+    }
+
+    function validateBatch() {
+      const selected = document.querySelector('input[name="batch"]:checked');
+      const err = document.getElementById("batchErr");
+      if (!selected) {
+        err.innerText = "Please choose a batch timing.";
+        return false;
+      }
+      err.innerText = "";
+      return true;
+    }
+
+    function validateTerms() {
+      const err = document.getElementById("termsErr");
+      if (!termsCheck.checked) {
+        err.innerText = "You must agree before submitting.";
+        return false;
+      }
+      err.innerText = "";
+      return true;
+    }
+
+    nameInput.addEventListener("input", validateName);
+    ageInput.addEventListener("blur", validateAge);
+    phoneInput.addEventListener("input", validatePhone);
+    planSelect.addEventListener("change", validatePlan);
+    termsCheck.addEventListener("change", validateTerms);
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      const okName = validateName();
+      const okAge = validateAge();
+      const okPhone = validatePhone();
+      const okPlan = validatePlan();
+      const okBatch = validateBatch();
+      const okTerms = validateTerms();
+
+      if (okName && okAge && okPhone && okPlan && okBatch && okTerms) {
+        const batchVal = document.querySelector('input[name="batch"]:checked').value;
+        document.getElementById("admissionReceipt").innerText =
+          "==============================\n" +
+          "   GYM ADMISSION CONFIRMED    \n" +
+          "==============================\n" +
+          "Member Name : " + nameInput.value.trim() + "\n" +
+          "Age         : " + ageInput.value + "\n" +
+          "Phone       : " + phoneInput.value.trim() + "\n" +
+          "Plan        : " + planSelect.value + "\n" +
+          "Batch       : " + batchVal + "\n" +
+          "==============================";
+      }
+    });
+
+    form.addEventListener("reset", function () {
+      document.querySelectorAll(".err").forEach((el) => (el.innerText = ""));
+      document.getElementById("admissionReceipt").innerText = "";
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Experiment 4 - Functions, Closures, Try-Catch & Palindrome</title>
+</head>
+<body>
+  <h2>Experiment 4: Palindrome Checker</h2>
+
+  <label>Enter Word or Number: <input type="text" id="textInput"></label>
+  <button onclick="handleCheck()">Check Palindrome</button>
+
+  <p id="statusMsg"></p>
+  <p id="counterMsg"></p>
+
+  <script>
+    // Global variable
+    const APP_TITLE = "Palindrome Validator";
+
+    // Closure: Maintains private check count across button clicks
+    function createAttemptTracker() {
+      let attempts = 0; // Lexically scoped private variable
+      return function () {
+        attempts++;
+        return attempts;
+      };
+    }
+    const incrementAttempts = createAttemptTracker();
+
+    // Arrow function to reverse a string
+    const reverseString = (str) => str.split("").reverse().join("");
+
+    // Function declaration to validate and check palindrome
+    function checkPalindrome(rawInput) {
+      if (rawInput.trim() === "") {
+        throw new Error("Input cannot be empty. Please type a word or number.");
+      }
+
+      // Normalize: lowercase and remove spaces/punctuation
+      const cleaned = rawInput.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+      if (cleaned.length === 0) {
+        throw new Error("Input must contain at least one letter or digit.");
+      }
+
+      const reversed = reverseString(cleaned);
+      return {
+        original: rawInput,
+        cleaned: cleaned,
+        reversed: reversed,
+        isMatch: cleaned === reversed
+      };
+    }
+
+    // Event handler using try-catch-finally
+    function handleCheck() {
+      const inputVal = document.getElementById("textInput").value;
+      const statusEl = document.getElementById("statusMsg");
+      const counterEl = document.getElementById("counterMsg");
+      let totalChecks = 0;
+
+      try {
+        const result = checkPalindrome(inputVal);
+        if (result.isMatch) {
+          statusEl.innerText =
+            "\"" + result.original + "\" IS a Palindrome! (Cleaned: " + result.cleaned + ")";
+        } else {
+          statusEl.innerText =
+            "\"" + result.original + "\" is NOT a Palindrome. (Reversed: " + result.reversed + ")";
+        }
+      } catch (error) {
+        statusEl.innerText = "Error: " + error.message;
+      } finally {
+        totalChecks = incrementAttempts();
+        counterEl.innerText = APP_TITLE + " - Total Checks Performed: " + totalChecks;
+      }
+    }
+  </script>
+</body>
+</html>
